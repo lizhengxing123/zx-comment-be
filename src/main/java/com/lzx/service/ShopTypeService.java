@@ -11,9 +11,9 @@ import java.util.List;
 public interface ShopTypeService {
 
     /**
-     * 获取所有购物类型列表
+     * 获取所有店铺类型列表
      *
-     * @return 所有购物类型实体列表
+     * @return 所有店铺类型实体列表
      */
     List<ShopType> getList();
 }

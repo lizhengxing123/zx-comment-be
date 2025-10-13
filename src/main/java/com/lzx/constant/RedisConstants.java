@@ -9,11 +9,16 @@ public class RedisConstants {
     public static final String LOGIN_USER_KEY = "login:token:";
     // 登录用户，过期时间
     public static final Long LOGIN_USER_TTL = 30L;
-
+    // 空值缓存，过期时间
     public static final Long CACHE_NULL_TTL = 2L;
-
-    public static final Long CACHE_SHOP_TTL = 30L;
+    // 店铺类型缓存，键名前缀
+    public static final String CACHE_SHOP_TYPE_KEY = "cache:shopType:list";
+    // 店铺类型缓存，过期时间，这个不是经常变化的，时间可以设置长一点，比如 1 天
+    public static final Long CACHE_SHOP_TYPE_TTL = 1L;
+    // 商户缓存，键名前缀
     public static final String CACHE_SHOP_KEY = "cache:shop:";
+    // 商户缓存，过期时间
+    public static final Long CACHE_SHOP_TTL = 30L;
 
     public static final String LOCK_SHOP_KEY = "lock:shop:";
     public static final Long LOCK_SHOP_TTL = 10L;

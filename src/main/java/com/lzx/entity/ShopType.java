@@ -10,7 +10,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 
+ * 店铺类型实体类
  * </p>
  *
  * @author 李正星

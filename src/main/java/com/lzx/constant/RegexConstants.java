@@ -1,9 +1,9 @@
-package com.lzx.utils;
+package com.lzx.constant;
 
 /**
  * 一些正则表达式常量
  */
-public abstract class RegexPatterns {
+public abstract class RegexConstants {
     /**
      * 手机号正则
      */

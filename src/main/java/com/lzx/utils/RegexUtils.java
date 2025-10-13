@@ -1,6 +1,7 @@
 package com.lzx.utils;
 
 import cn.hutool.core.util.StrUtil;
+import com.lzx.constant.RegexConstants;
 
 /**
  * 正则表达式工具类
@@ -12,7 +13,7 @@ public class RegexUtils {
      * @return true:符合，false：不符合
      */
     public static boolean isPhoneInvalid(String phone){
-        return mismatch(phone, RegexPatterns.PHONE_REGEX);
+        return mismatch(phone, RegexConstants.PHONE_REGEX);
     }
     /**
      * 是否是无效邮箱格式
@@ -20,7 +21,7 @@ public class RegexUtils {
      * @return true:符合，false：不符合
      */
     public static boolean isEmailInvalid(String email){
-        return mismatch(email, RegexPatterns.EMAIL_REGEX);
+        return mismatch(email, RegexConstants.EMAIL_REGEX);
     }
 
     /**
@@ -29,7 +30,7 @@ public class RegexUtils {
      * @return true:符合，false：不符合
      */
     public static boolean isCodeInvalid(String code){
-        return mismatch(code, RegexPatterns.VERIFY_CODE_REGEX);
+        return mismatch(code, RegexConstants.VERIFY_CODE_REGEX);
     }
 
     // 校验是否不符合正则格式

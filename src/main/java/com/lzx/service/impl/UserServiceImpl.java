@@ -124,10 +124,11 @@ public class UserServiceImpl implements UserService {
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         // 2、创建一个 UUID 作为 token
         String token = UUID.randomUUID().toString(true); // 不带 - 的 UUID
+        String key = LOGIN_USER_KEY + token;
         // 3、将 UserDTO 转为 Hash 存储
         // 需要注意的是，Long 类型的转换会出错，需要手动转换为 String
         stringRedisTemplate.opsForHash().putAll(
-                LOGIN_USER_KEY + token,
+                key,
                 BeanUtil.beanToMap(
                         userDTO,
                         new HashMap<>(),
@@ -136,8 +137,8 @@ public class UserServiceImpl implements UserService {
                                 .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString())
                 )
         );
-        // 4、设置过期时间
-        stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.MINUTES);
+        // 4、设置过期时间，开发环境，可以设置长一点，比如 1 天，生产环境，根据业务场景设置过期时间
+        stringRedisTemplate.expire(key, LOGIN_USER_TTL, TimeUnit.DAYS);
 
         log.info("用户登录成功，用户信息：{}", userDTO);
 
