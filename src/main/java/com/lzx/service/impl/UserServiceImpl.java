@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.lzx.constant.RedisConstants.*;
+import static com.lzx.redis.RedisConstants.*;
 import static com.lzx.constant.SystemConstants.USER_NICK_NAME_PREFIX;
 
 /**
@@ -137,7 +137,8 @@ public class UserServiceImpl implements UserService {
                                 .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString())
                 )
         );
-        // 4、设置过期时间，开发环境，可以设置长一点，比如 1 天，生产环境，根据业务场景设置过期时间
+        // 4、设置过期时间
+        // TODO 后面需要改为分钟
         stringRedisTemplate.expire(key, LOGIN_USER_TTL, TimeUnit.DAYS);
 
         log.info("用户登录成功，用户信息：{}", userDTO);

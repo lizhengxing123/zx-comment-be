@@ -1,16 +1,19 @@
 package com.lzx.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
 import lombok.Getter;
 import lombok.Setter;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author 李正星
@@ -78,4 +81,22 @@ public class Voucher implements Serializable {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    /**
+     * 秒杀券相关信息：库存
+     */
+    @TableField(exist = false)
+    private Integer stock;
+
+    /**
+     * 秒杀券相关信息：生效时间
+     */
+    @TableField(exist = false)
+    private LocalDateTime beginTime;
+
+    /**
+     * 秒杀券相关信息：失效时间
+     */
+    @TableField(exist = false)
+    private LocalDateTime endTime;
 }

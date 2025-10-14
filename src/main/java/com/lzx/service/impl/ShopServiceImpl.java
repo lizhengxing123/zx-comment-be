@@ -1,20 +1,18 @@
 package com.lzx.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.lzx.constant.MessageConstants;
-import com.lzx.constant.RedisConstants;
+import com.lzx.redis.RedisConstants;
 import com.lzx.entity.Shop;
 import com.lzx.exception.BaseException;
 import com.lzx.mapper.ShopMapper;
 import com.lzx.result.CacheResult;
 import com.lzx.service.ShopService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lzx.utils.CacheClient;
-import com.lzx.utils.RedisData;
+import com.lzx.redis.CacheClient;
+import com.lzx.redis.RedisData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;

@@ -2,7 +2,7 @@ package com.lzx.interceptor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.lzx.constant.RedisConstants;
+import com.lzx.redis.RedisConstants;
 import com.lzx.constant.SystemConstants;
 import com.lzx.dto.UserDTO;
 import com.lzx.utils.UserHolder;
@@ -60,7 +60,8 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
 
         // 4、刷新 token 过期时间
         log.info("刷新 token 过期时间");
-        stringRedisTemplate.expire(redisKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+        // TODO 后面需要改为分钟
+        stringRedisTemplate.expire(redisKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.DAYS);
 
         // 5、校验通过，放行
         return true;

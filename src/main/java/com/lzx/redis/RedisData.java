@@ -1,4 +1,4 @@
-package com.lzx.utils;
+package com.lzx.redis;
 
 import lombok.Data;
 

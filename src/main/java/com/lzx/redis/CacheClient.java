@@ -1,13 +1,9 @@
-package com.lzx.utils;
+package com.lzx.redis;
 
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.lzx.constant.RedisConstants;
-import com.lzx.entity.Shop;
-import com.lzx.result.CacheResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -18,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * 缓存客户端
@@ -63,7 +58,11 @@ public class CacheClient {
     }
 
     /**
-     * 从缓存中获取指定类型的对象，并处理缓存穿透
+     * 缓存穿透解决方案：缓存空对象
+     * 缓存穿透：查询不存在的商户 ID，由于缓存中没有该商户，每次都要查询数据库，数据库中也不存在，也不会建立缓存，就会导致一直请求数据库。
+     * 解决方法：
+     * 1. 缓存空对象：当查询到数据库中不存在该商户时，缓存一个空对象，设置较短的过期时间，避免缓存穿透。
+     * 2. 布隆过滤器：在查询数据库之前，先使用布隆过滤器判断该商户是否存在，不存在则直接返回，避免查询数据库。
      *
      * @param keyPrefix  缓存键前缀
      * @param id         缓存键后缀（通常是业务主键）
@@ -106,7 +105,12 @@ public class CacheClient {
     }
 
     /**
-     * 从缓存中获取指定类型的对象，并处理缓存击穿（逻辑过期）
+     * 缓存击穿解决方案：逻辑过期
+     * 缓存击穿：也叫热点 Key 问题，就是一个被高并发访问并且缓存重建业务较复杂的 Key 突然失效了，无数的请求访问会在瞬间给数据库带来巨大的冲击。
+     * 解决方法：
+     * 1. 互斥锁：如果查询缓存未命中，先尝试获取一个互斥锁，只有获取到锁的线程才可以查询数据库，重建缓存数据，其他线程等待。
+     * 2. 逻辑过期：在缓存中存储商户信息时，额外存储一个过期时间，当查询到过期时间时，先判断是否过期，如果过期，则新开一个线程异步查询数据库，
+     * 更新缓存数据，并返回之前的缓存数据，等到新线程查询完成后，新一轮的请求会返回新的缓存数据。
      *
      * @param keyPrefix     缓存键前缀
      * @param id            缓存键后缀（通常是业务主键）
@@ -166,7 +170,12 @@ public class CacheClient {
     }
 
     /**
-     * 从缓存中获取指定类型的对象，并处理缓存击穿（互斥锁）
+     * 缓存击穿解决方案：互斥锁
+     * 缓存击穿：也叫热点 Key 问题，就是一个被高并发访问并且缓存重建业务较复杂的 Key 突然失效了，无数的请求访问会在瞬间给数据库带来巨大的冲击。
+     * 解决方法：
+     * 1. 互斥锁：如果查询缓存未命中，先尝试获取一个互斥锁，只有获取到锁的线程才可以查询数据库，重建缓存数据，其他线程等待。
+     * 2. 逻辑过期：在缓存中存储商户信息时，额外存储一个过期时间，当查询到过期时间时，先判断是否过期，如果过期，则新开一个线程异步查询数据库，
+     * 更新缓存数据，并返回之前的缓存数据，等到新线程查询完成后，新一轮的请求会返回新的缓存数据。
      *
      * @param keyPrefix     缓存键前缀
      * @param id            缓存键后缀（通常是业务主键）
@@ -177,15 +186,7 @@ public class CacheClient {
      * @param lockKeyPrefix 互斥锁键名前缀
      * @return 缓存值
      */
-    public <T, ID> T queryWithMutex(
-            String keyPrefix,
-            ID id,
-            Class<T> clazz,
-            Function<ID, T> dbFallback,
-            long timeout,
-            TimeUnit unit,
-            String lockKeyPrefix
-    ) {
+    public <T, ID> T queryWithMutex(String keyPrefix, ID id, Class<T> clazz, Function<ID, T> dbFallback, long timeout, TimeUnit unit, String lockKeyPrefix) {
         // 构建 Redis 缓存键名
         String key = keyPrefix + id;
 

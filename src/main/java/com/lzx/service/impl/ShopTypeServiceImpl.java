@@ -1,7 +1,7 @@
 package com.lzx.service.impl;
 
 import cn.hutool.json.JSONUtil;
-import com.lzx.constant.RedisConstants;
+import com.lzx.redis.RedisConstants;
 import com.lzx.entity.ShopType;
 import com.lzx.exception.BaseException;
 import com.lzx.mapper.ShopTypeMapper;
