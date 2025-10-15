@@ -9,12 +9,15 @@ import com.lzx.entity.VoucherOrder;
 import com.lzx.exception.BaseException;
 import com.lzx.mapper.SeckillVoucherMapper;
 import com.lzx.mapper.VoucherOrderMapper;
+import com.lzx.redis.RedisConstants;
 import com.lzx.redis.RedisIdWorker;
 import com.lzx.redis.SimpleRedisLock;
 import com.lzx.service.VoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lzx.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
+//import org.redisson.api.RLock;
+//import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static javax.swing.Spring.minus;
 
@@ -37,6 +41,8 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
     private final SeckillVoucherMapper seckillVoucherMapper;
     private final RedisIdWorker redisIdWorker;
     private final StringRedisTemplate stringRedisTemplate;
+//    private final RedissonClient redissonClient;
+
 
     /**
      * 秒杀券下单
@@ -54,7 +60,7 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
         // 处理秒杀券订单（包含一人一单校验、库存扣除和订单创建）使用 synchronized 实现
         // return seckillVoucherAndSinglePurchaseWithSynchronized(voucherId);
         // 处理秒杀券订单（包含一人一单校验、库存扣除和订单创建）使用 Redis 分布式锁实现
-        return seckillVoucherAndSinglePurchaseWithSimpleRedisLock(voucherId);
+         return seckillVoucherAndSinglePurchaseWithSimpleRedisLock(voucherId);
     }
 
     // ------------------ 私有方法 -------------------
@@ -138,7 +144,10 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
 
         Long userId = UserHolder.getUser().getId();
         // 创建锁对象
+
         SimpleRedisLock lock = new SimpleRedisLock("order:" + userId, stringRedisTemplate);
+        // 使用 redisson 中的可重入锁实现
+        // RLock lock = redissonClient.getLock(RedisConstants.REDISSON_LOCK_KEY + "order:" + userId);
         // 尝试获取锁
         boolean isLock = lock.tryLock(1200L);
         if (!isLock) {

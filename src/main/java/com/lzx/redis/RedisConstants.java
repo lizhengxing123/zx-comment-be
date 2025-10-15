@@ -29,6 +29,8 @@ public class RedisConstants {
     public static final String LOCK_KEY_PREFIX = "lock:";
     // 互斥锁，过期时间
     public static final Long LOCK_KEY_TTL = 10L;
+    // redisson 分布式锁，键名前缀
+    public static final String REDISSON_LOCK_KEY = "redisson:lock:";
 
     // 秒杀商品库存缓存，键名前缀
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
