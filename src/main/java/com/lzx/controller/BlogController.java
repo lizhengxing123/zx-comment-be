@@ -3,6 +3,7 @@ package com.lzx.controller;
 import com.lzx.dto.UserDTO;
 import com.lzx.entity.Blog;
 import com.lzx.result.Result;
+import com.lzx.result.ScrollResult;
 import com.lzx.service.BlogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,5 +86,39 @@ public class BlogController {
         log.debug("查询博客最早点赞的n个人");
         List<UserDTO> users = blogService.queryBlogLikes(id);
         return Result.success("查询博客最早点赞的n个人成功", users);
+    }
+
+    /**
+     * 根据用户 ID 查询用户发布的博客
+     *
+     * @param current 当前页码
+     * @param userId  用户 ID
+     * @return 博客列表
+     */
+    @GetMapping("/of/user")
+    public Result<List<Blog>> queryBlogsByUserId(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam Long userId
+    ) {
+        log.debug("根据用户 ID 查询用户发布的博客");
+        List<Blog> blogs = blogService.queryBlogsByUserId(current, userId);
+        return Result.success("根据用户 ID 查询用户发布的博客成功", blogs);
+    }
+
+    /**
+     * 查询当前用户关注的博主发布的博客列表
+     *
+     * @param lastTimeStamp 上一次查询的最小时间戳
+     * @param offset        偏移量
+     * @return 博客列表
+     */
+    @GetMapping("/of/follow")
+    public Result<ScrollResult<Blog>> queryBlogsOfFollow(
+            @RequestParam Long lastTimeStamp,
+            @RequestParam(defaultValue = "0") Integer offset
+    ) {
+        log.debug("查询当前用户关注的博主发布的博客列表");
+        ScrollResult<Blog> blogs = blogService.queryBlogsOfFollow(lastTimeStamp, offset);
+        return Result.success("查询当前用户关注的博主发布的博客列表成功", blogs);
     }
 }

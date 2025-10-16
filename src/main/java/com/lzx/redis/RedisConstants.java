@@ -33,11 +33,14 @@ public class RedisConstants {
     public static final String REDISSON_LOCK_KEY = "redisson:lock:";
     // 秒杀商品库存缓存，键名前缀
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
+    // 秒杀订单 Stream 队列，键名前缀
+    public static final String SECKILL_STREAMS_ORDER_KEY = "streams.order";
     // 博客点赞缓存，键名前缀
     public static final String BLOG_LIKED_KEY = "blog:liked:";
+    // 用户关注缓存，键名前缀
+    public static final String FOLLOW_USER_KEY = "follows:";
+    // 用来推送博客的缓存，键名前缀
     public static final String FEED_KEY = "feed:";
     public static final String SHOP_GEO_KEY = "shop:geo:";
     public static final String USER_SIGN_KEY = "sign:";
-    // 秒杀订单 Stream 队列，键名前缀
-    public static final String SECKILL_STREAMS_ORDER_KEY = "streams.order";
 }

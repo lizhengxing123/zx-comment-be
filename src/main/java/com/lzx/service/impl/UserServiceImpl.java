@@ -78,6 +78,23 @@ public class UserServiceImpl implements UserService {
         return saveUserToRedis(user);
     }
 
+    /**
+     * 根据 ID 查询用户信息
+     *
+     * @param id 用户 ID
+     * @return 用户信息
+     */
+    @Override
+    public UserDTO queryUserById(Long id) {
+        // 1、从数据库查询用户信息
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BaseException("用户不存在");
+        }
+        // 2、将 user 转换为 UserDTO
+        return BeanUtil.copyProperties(user, UserDTO.class);
+    }
+
     // --------------------------- 私有方法 ---------------------------
 
     /**

@@ -14,17 +14,25 @@ public interface UserService {
     /**
      * 发送验证码
      *
-     * @param phone 手机号
+     * @param phone   手机号
      * @param session HttpSession
      * @return 验证码
      */
     String sendCode(String phone, HttpSession session);
 
-     /**
+    /**
      * 登录
      *
      * @param loginForm 登录表单
-      * @return token 登录凭证
+     * @return token 登录凭证
      */
     String login(LoginFormDTO loginForm);
+
+    /**
+     * 根据 ID 查询用户信息
+     *
+     * @param id 用户 ID
+     * @return 用户信息
+     */
+    UserDTO queryUserById(Long id);
 }
