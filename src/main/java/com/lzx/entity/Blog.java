@@ -1,6 +1,7 @@
 package com.lzx.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
@@ -40,6 +41,18 @@ public class Blog implements Serializable {
     private Long userId;
 
     /**
+     * 用户头像
+     */
+    @TableField(exist = false)
+    private String icon;
+
+    /**
+     * 用户名称
+     */
+     @TableField(exist = false)
+    private String name;
+
+    /**
      * 标题
      */
     private String title;
@@ -58,6 +71,12 @@ public class Blog implements Serializable {
      * 点赞数量
      */
     private Integer liked;
+
+    /**
+     * 用户是否点赞过
+     */
+    @TableField(exist = false)
+    private Boolean isLiked;
 
     /**
      * 评论数量

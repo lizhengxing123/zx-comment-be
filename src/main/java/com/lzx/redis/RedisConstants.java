@@ -33,6 +33,7 @@ public class RedisConstants {
     public static final String REDISSON_LOCK_KEY = "redisson:lock:";
     // 秒杀商品库存缓存，键名前缀
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
+    // 博客点赞缓存，键名前缀
     public static final String BLOG_LIKED_KEY = "blog:liked:";
     public static final String FEED_KEY = "feed:";
     public static final String SHOP_GEO_KEY = "shop:geo:";

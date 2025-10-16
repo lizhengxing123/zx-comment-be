@@ -1,16 +1,52 @@
 package com.lzx.service;
 
+import com.lzx.dto.UserDTO;
 import com.lzx.entity.Blog;
-import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
- * <p>
- *  服务类
- * </p>
- *
- * @author 李正星
- * @since 2025-09-18
+ * 博客服务类接口
  */
 public interface BlogService {
 
+    /**
+     * 新增博客
+     *
+     * @param blog 博客实体
+     * @return 新增博客 ID
+     */
+    Long save(Blog blog);
+
+    /**
+     * 根据 ID 查询博客
+     *
+     * @param id 博客 ID
+     * @return 博客实体
+     */
+    Blog getById(Long id);
+
+    /**
+     * 点赞博客，如果用户已经点赞过，则取消点赞
+     *
+     * @param blogId 博客 ID
+     * @return 是否点赞成功
+     */
+    Boolean likeBlog(Long blogId);
+
+    /**
+     * 查询热门博客
+     *
+     * @param current 当前页码
+     * @return 热门博客列表
+     */
+    List<Blog> queryHotBlogs(Integer current);
+
+    /**
+     * 查询博客最早点赞的 n 个人
+     *
+     * @param id 博客 ID
+     * @return 点赞用户列表
+     */
+    List<UserDTO> queryBlogLikes(Long id);
 }
