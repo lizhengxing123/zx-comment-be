@@ -41,6 +41,7 @@ public class RedisConstants {
     public static final String FOLLOW_USER_KEY = "follows:";
     // 用来推送博客的缓存，键名前缀
     public static final String FEED_KEY = "feed:";
+    // 店铺位置缓存，键名前缀
     public static final String SHOP_GEO_KEY = "shop:geo:";
     public static final String USER_SIGN_KEY = "sign:";
 }

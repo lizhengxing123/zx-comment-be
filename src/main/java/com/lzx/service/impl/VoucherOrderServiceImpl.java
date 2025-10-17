@@ -79,7 +79,7 @@ public class VoucherOrderServiceImpl implements VoucherOrderService {
     @PostConstruct
     public void init() {
         // 启动订单处理线程
-        SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
+        // SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
     }
 
     // Redis Stream 消息队列实现方案

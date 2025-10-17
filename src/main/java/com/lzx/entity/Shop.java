@@ -1,6 +1,7 @@
 package com.lzx.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
@@ -98,4 +99,10 @@ public class Shop implements Serializable {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    /**
+     * 距离
+     */
+    @TableField(exist = false)
+    private Double distance;
 }

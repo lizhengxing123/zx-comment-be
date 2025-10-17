@@ -4,7 +4,11 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lzx.constant.MessageConstants;
+import com.lzx.constant.SystemConstants;
 import com.lzx.redis.RedisConstants;
 import com.lzx.entity.Shop;
 import com.lzx.exception.BaseException;
@@ -15,14 +19,23 @@ import com.lzx.redis.CacheClient;
 import com.lzx.redis.RedisData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.*;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.domain.geo.GeoReference;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 商户服务实现类
@@ -104,6 +117,91 @@ public class ShopServiceImpl implements ShopService {
         // 3. 删除 Redis 中的商户缓存
         stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_KEY + shop.getId());
     }
+
+    /**
+     * 根据类型查询商户列表
+     *
+     * @param typeId  商户类型 ID
+     * @param current 当前页码，默认值为 1
+     * @param x       经度
+     * @param y       纬度
+     * @return 商户实体类列表
+     */
+    @Override
+    public List<Shop> queryShopsByType(Integer typeId, Integer current, Double x, Double y) {
+        // 判断是否需要根据经纬度查询
+        if (x == null || y == null) {
+            // 如果不根据经纬度查询，直接根据类型查询
+            return shopMapper.selectPage(
+                    new Page<>(current, SystemConstants.MAX_PAGE_SIZE),
+                    new LambdaQueryWrapper<Shop>()
+                            .eq(Shop::getTypeId, typeId)
+                            .orderByDesc(Shop::getScore, Shop::getSold)
+            ).getRecords();
+        }
+        // 根据经纬度进行查询
+        // 构建 redis key
+        String key = RedisConstants.SHOP_GEO_KEY + typeId;
+        // 计算分页参数
+        int start = (current - 1) * SystemConstants.MAX_PAGE_SIZE;
+        int end = start + SystemConstants.MAX_PAGE_SIZE;
+        // 查询 Redis 中指定区域内的商户
+        // GEOSEARCH BYLONLAT x y BYRADIUS 10 WITHDISTANCE
+        /*GeoResults<RedisGeoCommands.GeoLocation<String>> search = stringRedisTemplate.opsForGeo()
+                .search(
+                        key,
+                        GeoReference.fromCoordinate(x, y),
+                        // new Distance(10.0, Metrics.KILOMETERS),
+                        new Distance(5000),
+                        RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs()
+                                .includeDistance()
+                                .limit(end)
+                );*/
+        // GEOSEARCH 在 6.2 版本才支持，低版本使用 GEORADIUS
+        GeoResults<RedisGeoCommands.GeoLocation<String>> search = stringRedisTemplate.opsForGeo()
+                .radius(
+                        key,
+                        new Circle(new Point(x, y), new Distance(5000)),
+                        RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
+                                .includeDistance()
+                                .limit(end)
+                );
+        if (search == null || search.getContent().isEmpty()) {
+            // 如果查询结果为空，返回空列表
+            return List.of();
+        }
+
+        // 获取需要的列表数据
+        List<GeoResult<RedisGeoCommands.GeoLocation<String>>> results = search.getContent().stream().skip(start).toList();
+        if (results.isEmpty()) {
+            // 没有下一页了，返回空列表
+            return List.of();
+        }
+        // 提取查询结果中的商户 ID 列表和距离
+        List<Long> shopIds = new ArrayList<>(results.size());
+        // 商铺 id 和距离的对象关系
+        Map<Long, Double> distanceMap = new HashMap<>(results.size());
+        // 循环设置商户 ID 列表和距离映射
+        for (GeoResult<RedisGeoCommands.GeoLocation<String>> result : results) {
+            Long shopId = Long.valueOf(result.getContent().getName());
+            shopIds.add(shopId);
+            distanceMap.put(shopId, result.getDistance().getValue());
+        }
+
+        // 根据商户 ID 列表查询所有商户信息
+        List<Shop> shops = shopMapper.selectList(
+                Wrappers.lambdaQuery(Shop.class)
+                        .in(Shop::getId, shopIds)
+                        .last("ORDER BY FIELD(id, " + StrUtil.join(",", shopIds) + ")")
+        );
+        // 循环设置距离
+        for (Shop shop : shops) {
+            shop.setDistance(distanceMap.get(shop.getId()));
+        }
+
+        return shops;
+    }
+
 
     // --------------------- 私有方法 ---------------------------
 
