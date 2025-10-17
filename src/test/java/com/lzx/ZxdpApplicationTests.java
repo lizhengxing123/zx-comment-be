@@ -1,5 +1,6 @@
 package com.lzx;
 
+import cn.hutool.core.util.RandomUtil;
 import com.lzx.entity.Shop;
 import com.lzx.mapper.ShopMapper;
 import com.lzx.redis.RedisConstants;
@@ -76,4 +77,23 @@ class ZxdpApplicationTests {
                 });
     }
 
+    @Test
+    void testHyperLogLog() {
+        // 测试 HyperLogLog 统计独立用户数
+        int arrLen = 1000;
+        int count = 1000000;
+        String key = "hll";
+        String[] values = new String[arrLen];
+        int j;
+        for (int i = 0; i < count; i++) {
+            j = i % arrLen;
+            values[j] = "user_" + i;
+            if (j == arrLen - 1) {
+                stringRedisTemplate.opsForHyperLogLog().add(key, values);
+            }
+        }
+        Long size = stringRedisTemplate.opsForHyperLogLog().size(key);
+        // 997593
+        System.out.println("size:" + size);
+    }
 }
