@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lzx.dto.LoginFormDTO;
 import com.lzx.dto.UserDTO;
@@ -11,17 +12,22 @@ import com.lzx.entity.User;
 import com.lzx.exception.BaseException;
 import com.lzx.exception.PhoneInvalidException;
 import com.lzx.mapper.UserMapper;
+import com.lzx.redis.RedisConstants;
 import com.lzx.service.UserService;
 import com.lzx.utils.RegexUtils;
+import com.lzx.utils.UserHolder;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.lzx.redis.RedisConstants.*;
@@ -95,6 +101,61 @@ public class UserServiceImpl implements UserService {
         return BeanUtil.copyProperties(user, UserDTO.class);
     }
 
+    /**
+     * 用户签到
+     * 使用 Redis 中的 BitMap 来记录用户签到
+     */
+    @Override
+    public void sign() {
+        // 构建 Redis key: sign:userId:yyyy:MM
+        String key = getSignKey();
+        // 签到：SETBIT key offset 1
+        stringRedisTemplate.opsForValue().setBit(key, LocalDate.now().getDayOfMonth() - 1, true);
+    }
+
+    /**
+     * 签到统计：获取当前用户截止当前时间在本月的连续签到次数
+     *
+     * @return 签到统计信息
+     */
+    @Override
+    public Integer signCount() {
+        // 获取当前用户
+        UserDTO user = UserHolder.getUser();
+        // 获取当前年月日，使用数组存储
+        String[] date = LocalDate.now().toString().split("-");
+        // 构建 Redis key: sign:userId:yyyy:MM
+        String key = getSignKey();
+        // 获取本月的位图：GETFIELD key GET u天 0
+        List<Long> longs = stringRedisTemplate.opsForValue().bitField(
+                key,
+                BitFieldSubCommands.create().get(
+                        BitFieldSubCommands.BitFieldType.unsigned(LocalDate.now().getDayOfMonth())
+                ).valueAt(0));
+        if (longs == null || longs.isEmpty()) {
+            // 没有签到记录
+            return 0;
+        }
+        // 获取签到记录的十进制整数
+        Long signRecord = longs.getFirst();
+        // 初始化连续签到次数
+        int count = 0;
+        // 循环遍历签到记录的每一位
+        for (int i = 0; i < LocalDate.now().getDayOfMonth(); i++) {
+            // 如果第 i 位是 1，则说明用户在第 i 天签到了
+            if ((signRecord >> i & 1) != 0) {
+                count++;
+            } else {
+                // 如果第 i 位是 0，则说明用户在第 i 天没有签到
+                // 直接退出循环
+                break;
+            }
+        }
+        // 返回连续签到次数
+        return count;
+    }
+
+
     // --------------------------- 私有方法 ---------------------------
 
     /**
@@ -124,10 +185,7 @@ public class UserServiceImpl implements UserService {
     private User createUserByPhone(String phone) {
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getPhone, phone));
         if (user == null) {
-            user = User.builder()
-                    .phone(phone)
-                    .nickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(6) + phone.substring(7))
-                    .build();
+            user = User.builder().phone(phone).nickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(6) + phone.substring(7)).build();
             userMapper.insert(user);
         }
         return user;
@@ -144,16 +202,7 @@ public class UserServiceImpl implements UserService {
         String key = LOGIN_USER_KEY + token;
         // 3、将 UserDTO 转为 Hash 存储
         // 需要注意的是，Long 类型的转换会出错，需要手动转换为 String
-        stringRedisTemplate.opsForHash().putAll(
-                key,
-                BeanUtil.beanToMap(
-                        userDTO,
-                        new HashMap<>(),
-                        CopyOptions.create()
-                                .setIgnoreNullValue(true)
-                                .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString())
-                )
-        );
+        stringRedisTemplate.opsForHash().putAll(key, BeanUtil.beanToMap(userDTO, new HashMap<>(), CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString())));
         // 4、设置过期时间
         // TODO 后面需要改为分钟
         stringRedisTemplate.expire(key, LOGIN_USER_TTL, TimeUnit.DAYS);
@@ -162,5 +211,17 @@ public class UserServiceImpl implements UserService {
 
         // 5、返回 token
         return token;
+    }
+
+    /**
+     * 获取位图 key
+     */
+    private String getSignKey() {
+        // 获取当前用户
+        UserDTO user = UserHolder.getUser();
+        // 获取当前年月日，使用数组存储
+        String[] date = LocalDate.now().toString().split("-");
+        // 构建 Redis key: sign:userId:yyyy:MM
+        return StrUtil.format(USER_SIGN_KEY + "{}:{}:{}", user.getId(), date[0], date[1]);
     }
 }

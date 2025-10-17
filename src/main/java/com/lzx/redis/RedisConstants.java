@@ -43,5 +43,6 @@ public class RedisConstants {
     public static final String FEED_KEY = "feed:";
     // 店铺位置缓存，键名前缀
     public static final String SHOP_GEO_KEY = "shop:geo:";
+    // 用户签到缓存，键名前缀
     public static final String USER_SIGN_KEY = "sign:";
 }

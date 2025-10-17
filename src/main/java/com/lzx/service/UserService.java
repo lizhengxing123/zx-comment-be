@@ -35,4 +35,16 @@ public interface UserService {
      * @return 用户信息
      */
     UserDTO queryUserById(Long id);
+
+    /**
+     * 用户签到
+     */
+    void sign();
+
+    /**
+     * 签到统计：获取当前用户截止当前时间在本月的连续签到次数
+     *
+     * @return 签到统计信息
+     */
+    Integer signCount();
 }

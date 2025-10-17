@@ -73,4 +73,28 @@ public class UserController {
         UserDTO user = userService.queryUserById(id);
         return Result.success("获取用户信息成功", user);
     }
+
+    /**
+     * 用户签到
+     *
+     * @return 签到成功
+     */
+    @PostMapping("/sign")
+    public Result<Void> sign() {
+        log.info("用户签到");
+        userService.sign();
+        return Result.success("签到成功");
+    }
+
+    /**
+     * 签到统计：获取当前用户截止当前时间在本月的连续签到次数
+     *
+     * @return 签到统计信息
+     */
+    @GetMapping("/sign/count")
+    public Result<Integer> signCount() {
+        log.info("用户签到统计");
+        Integer count = userService.signCount();
+        return Result.success("签到统计成功", count);
+    }
 }
